@@ -1,0 +1,138 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+node_types:
+  Alfresco.nodes.DockerContainer.PostgresScalable:
+    derived_from: igs.nodes.docker.DockerApplication
+    attributes:
+      cpu_upper_bound:
+        type: float
+      adjustment:
+        type: float
+      ram_upper_bound:
+        type: float
+    properties:
+      mem_limit: 
+        type:  scalar-unit.size
+        default: 512m
+        constraints:
+          - less_or_equal: 512m
+      container_port:
+        type: string
+        default: 5432
+      host_port:
+        type: string
+        default: 5431
+      postgres_password: 
+        type: string
+        default: alfresco
+      postgres_user: 
+        type: string
+        default: alfresco
+      postgres_db: 
+        type: string
+        default: alfresco
+      command: 
+        type: string
+        default: "postgres -c max_connections=300 -c log_min_messages=LOG"
+      container_data_dir:
+        type: string
+        required: false
+        default: /var/lib/postgresql/data
+    capabilities: 
+      containerApplication:
+        valid_source_types: [ igs.nodes.postgres.PostgresDBMS ]
+        type: igs.capabilities.container.PostgresDBMS
+
+    interfaces:
+      Scaling:
+        type: igs.interfaces.node.Scaling
+        operations:
+          scaleOut:
+            inputs:
+              adjustment: { default: 2, type: integer }
+            implementation:
+              primary: playbooks/scale-up.yaml
+
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create: 
+            inputs:
+              CLIENT_MNT_DIR:
+                type: string
+                required: true
+                default: { get_property: [ SELF, client_mnt_path ] } 
+              VOLUME_DIR:
+                type: string
+                required: true
+                default: { get_property: [ SELF, volume_dir ] }
+              CONTAINER_DATA_DIR:
+                type: string
+                required: true
+                default: { get_property: [ SELF, container_data_dir ] }
+              MEM_LIMIT:
+                type: string
+                required: true
+                default: { get_property: [ SELF, mem_limit ] }
+
+              POSTGRES_PASSWORD:
+                type: string
+                required: true
+                default: { get_property: [ SELF, postgres_password ] }
+              POSTGRES_USER:
+                type: string
+                required: true
+                default: { get_property: [ SELF, postgres_user ] }
+              POSTGRES_DB:
+                type: string
+                required: true
+                default: { get_property: [ SELF, postgres_db ] }
+              COMMAND:
+                type: string
+                required: true
+                default: { get_property: [ SELF, command ] }
+        
+              CONTAINER_PORT:
+                type: string
+                required: true
+                default: { get_property: [ SELF, container_port ] }
+              HOST_PORT:
+                type: string
+                required: true
+                default: { get_property: [ SELF, host_port ] }
+              ANSIBLE_HOST_IP:
+                type: string
+                required: true
+                default: { get_attribute: [SELF, host, ansible_host_ip ] }
+              ANSIBLE_USER:
+                type: string
+                required: true
+                default: { get_attribute: [SELF, host, ansible_user ] }
+              ANSIBLE_HOST_NAME:
+                type: string
+                required: true
+                default: { get_attribute: [SELF, host, ansible_host_name ] } 
+              HOST_TIER:
+                type: string
+                required: true
+                default: { get_attribute: [SELF, host, tier ] }
+              CONTAINER_GROUP:
+                type: string
+                required: true
+                default: { get_property: [ SELF, group] }
+              LABELS:
+                type: string
+                required: true
+                default: { get_property: [ SELF, labels] }
+            implementation:
+              primary: playbooks/create-govern-stack-cluster.yaml 
+    artifacts:
+      create:
+        type: radon.artifacts.Ansible
+        file: playbooks/create-govern-stack-cluster.yaml 
+      scaleUp:
+        type: radon.artifacts.Ansible
+        file: playbooks/scale-up.yaml 
+          
+
+

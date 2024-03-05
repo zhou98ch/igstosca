@@ -26,3 +26,9 @@ node_types:
         occurrences: [ 1, UNBOUNDED ]
         valid_source_types: [igs.nodes.abstract.BlockStorage, igs.nodes.abstract.ContainerRuntime]
         type: tosca.capabilities.Container
+    requirements:
+      - host:
+          capability: tosca.capabilities.Container
+          node: igs.nodes.abstract.CloudPlatform
+          relationship: tosca.relationships.HostedOn
+          occurrences: [ 1, 1 ]

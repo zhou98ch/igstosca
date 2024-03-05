@@ -4,25 +4,94 @@ metadata:
   targetNamespace: "radon.blueprints"
 topology_template:
   node_templates:
-    Workstation:
-      type: radon.nodes.Workstation
-      metadata:
-        x: "640"
-        y: "413"
-        displayName: "Workstation"
-    SockShop:
-      type: radon.nodes.SockShop
-      metadata:
-        x: "638"
-        y: "101"
-        displayName: "SockShop"
+    Alfresco-ActiveMQ-Container:
+        type: Alfresco.nodes.DockerContainer.ActiveMQ
+        properties:
+            group: backend
+            labels: [node.labels.tile==backend]
+        requirements:
+          - host: docker-engine-1
+          - network: MockNetwork
+          - storage: MockStorage
+          - frontend: Alfresco-ContentApp-Container
+
+    Alfresco-ContentApp-Container:
+        type: Alfresco.nodes.DockerContainer.ContentApp
+        properties:
+            group: frontend
+            labels: [node.labels.tile==frontend]
+        requirements:
+          - host: docker-engine-1
+          - network: MockNetwork
+          - storage: MockStorage
+
+    Alfresco-ControlCenter-Container:
+      type: Alfresco.nodes.DockerContainer.ControlCenter
       properties:
-        component_version: 1
+          group: frontend
+          labels: [node.labels.tile==frontend]
       requirements:
-        - host:
-            node: Workstation
-            relationship: con_HostedOn_0
-            capability: host
-  relationship_templates:
-    con_HostedOn_0:
-      type: tosca.relationships.HostedOn
+        - host: docker-engine-1
+        - network: MockNetwork
+        - storage: MockStorage
+
+    Alfresco-Solr-Container:
+      type: Alfresco.nodes.DockerContainer.Solr
+      properties:
+          group: frontend
+          labels: [node.labels.isNfsClient==true]
+          container_data_dir: /opt/alfresco-search-services/data
+      requirements:
+        - host: docker-engine-1
+        - network: MockNetwork
+        - storage: solr-volume
+
+    Alfresco-Repository-Container:
+      type: Alfresco.nodes.DockerContainer.ContentRepository
+      properties:
+          group: frontend
+          labels: [node.labels.tile==frontend, node.labels.isNfsClient==true]
+          container_data_dir: /usr/local/tomcat/alf_data
+      requirements:
+        - host: docker-engine-1
+        - network: MockNetwork
+        - storage: repository-volume
+
+    Alfresco-Nginx-Container:
+      type: Alfresco.nodes.DockerContainer.Proxy
+      properties:
+          group: frontend
+          labels: [node.labels.tile==frontend]
+      requirements:
+        - host: docker-engine-1
+        - network: MockNetwork
+        - storage: MockStorage
+        - dependency_1: Alfresco-Share-Container
+
+
+    #To be added
+    ...
+    ...
+
+  policies:
+
+    - frontend_placement_policy:
+        type: igs.policies.placement
+        properties:
+          placementLabel: frontend
+        description: place the containers on frontend machine
+        targets: [ Alfresco-Nginx-Container, Alfresco-Repository-Container ]
+
+    - backend_placement_policy:
+        type: igs.policies.placement
+        properties:
+          placementLabel: backend
+        description: place the containers on backend machine
+        targets: [ Alfresco-Solr-Container, Alfresco-ControlCenter-Container, Alfresco-ActiveMQ-Container  ]
+    
+    - volume_requirement_placement_policy:
+        type: igs.policies.placement
+        properties:
+          placementLabel: NFSClient
+        description: place the containers on machine which are nfs clients
+        targets: [ Alfresco-Repository-Container, Alfresco-Solr-Container ]

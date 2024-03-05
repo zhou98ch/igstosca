@@ -1,0 +1,18 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+policy_types:
+  igs.policies.Placement:
+    description: The TOSCA Policy Type definition that is used to govern placement of TOSCA nodes or groups of nodes.
+    derived_from: igs.policies.Root
+    metadata:
+      targetNamespace: "igs.policies"
+      abstract: "false"
+      final: "false"
+
+    properties:
+      placementLabel:
+        type: string
+        description: filter of node label
+        required: true
+
+

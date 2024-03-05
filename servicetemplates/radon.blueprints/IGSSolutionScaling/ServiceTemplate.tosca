@@ -1,0 +1,34 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+metadata:
+  targetNamespace: "example.org.tosca.servicetemplates"
+  name: "Postgres-Scalable"
+imports:
+topology_template:
+
+  node_templates:
+    Alfresco-Postgres-Container-Scalable:
+      type: Alfresco.nodes.DockerContainer.PostgresScalable
+      properties:
+          group: frontend
+          labels: [node.labels.isNfsClient==true]
+          container_data_dir:  /var/lib/postgresql/data
+      requirements:
+        - host: docker-engine-1
+        - network: MockNetwork
+        - storage: postgres-volume
+
+
+    #To be added
+    ...
+    ...
+
+  policies:
+    - scale_out:
+        type: radon.policies.scaling.ScaleOut
+        properties:
+          # cpu_upper_bound: 60.0
+          adjustment: 2
+          # ram_upper_bound: 80
+        targets: [ Alfresco-Postgres-Container-Scalable ]
+

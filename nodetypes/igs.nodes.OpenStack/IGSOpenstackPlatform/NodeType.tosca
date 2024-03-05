@@ -1,0 +1,38 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+node_types:
+  igs.nodes.Openstack.OpenstackPlatform:
+    derived_from: igs.nodes.abstract.CloudPlatform
+    metadata:
+      targetNamespace: "igs.nodes.Openstack"
+      abstract: "false"
+      final: "false"
+    properties:
+      name:
+        type: string
+        description: The name of the cloud platform
+        default: "AWS"
+      region:
+        type: string
+        description: The region identifier, e.g., us-west-1
+    capabilities:
+      host:
+        occurrences: [ 1, UNBOUNDED ]
+        valid_source_types: [ igs.nodes.Openstack.OSInstance ]
+        type: tosca.capabilities.Container
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            implementation:
+              primary: configure
+              dependencies: [ policy ]
+              timeout: 0
+    artifacts:
+      create:
+        type: igs.artifacts.Ansible
+        file: files/create/create.yaml
+      policy:
+        type: tosca.artifacts.File
+        file: files/policy/policy.json

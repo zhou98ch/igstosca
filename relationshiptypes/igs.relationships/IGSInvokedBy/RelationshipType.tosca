@@ -15,4 +15,4 @@ relationship_types:
       commu_methods:
         type: string
         required: false
-    valid_target_types: [ radon.capabilities.Invoker ]
+    valid_target_types: [ igs.capabilities.Invoker ]

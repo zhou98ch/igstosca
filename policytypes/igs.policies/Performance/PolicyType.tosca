@@ -1,0 +1,23 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+policy_types:
+  igs.policies.Performance:
+    derived_from: tosca.policies.Performance
+    metadata:
+      targetNamespace: "igs.policies"
+      abstract: "false"
+      final: "false"
+    properties:
+      target_metric:
+        type: string
+        required: false
+      lower_bound:
+        type: float
+        required: false
+        constraints:
+          - greater_or_equal: 0.0
+      upper_bound:
+        type: float
+        required: false
+        constraints:
+          - greater_or_equal: 0.0
