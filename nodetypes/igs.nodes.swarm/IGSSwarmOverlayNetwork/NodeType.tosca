@@ -1,0 +1,30 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+node_types:
+  igs.nodes.swarm.OverlayNetwork:
+    derived_from: tosca.nodes.LoadBalancer
+    metadata:
+      targetNamespace: "igs.nodes.aws"
+      abstract: "false"
+      final: "false"
+    ####### override from tosca.nodes.LoadBalancer #########################
+    properties:
+      algorithm:
+        type: string
+        required: false
+        default: round-robin
+    requirements:
+      - manager:
+          node: igs.nodes.Swarm.Manager
+          capability: tosca.capabilities.Endpoint
+          relationship: tosca.relationships.RoutesTo
+          occurrences: [ 1,1 ]
+    capabilities:
+      client:
+        description: the Floating (IP) client's on the public network can connect to
+        occurrences: [ 0, UNBOUNDED ]
+        type: tosca.capabilities.Endpoint.Public
+    ##########################################################################
+    
+
+
